@@ -5,7 +5,6 @@
 int inicializar() 
 { 
      int * result;
-  
      result = inicializar_1(NULL,handle); 
      if (result == (int *)NULL) 
          cli_error();
