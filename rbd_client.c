@@ -6,11 +6,7 @@
 
 #include "rbd.h"
 
-//todo como vamos chamar as funções
-//via menu terminal???
-//result_1 retorna um ponteiro - verificar se é nulo
-//result_2 em diante é um inteiro - 0 ou 1
-//clnt - handler
+void cli_error(CLIENT *cnlt);
 
 int
 main (int argc, char *argv[])
@@ -26,6 +22,7 @@ main (int argc, char *argv[])
 	char * busca_1_arg;
 	char *host;
 	int opcao = 0;
+	int sair = 0;
 
 	if (argc < 2) {
 		printf ("usage: %s server_host\n", argv[0]);
@@ -40,55 +37,86 @@ main (int argc, char *argv[])
 		exit (1);
 	}
 
-	while (opcao == 0) {
-		printf("Menu de opções:\n");
+	while (sair == 0) {
+		printf("\nMenu de opções:\n");
 		printf("\n1- Inicializar\n 2- Inserir\n 3- Remover\n 4- Buscar\n 5-Sair\n\n");
 		scanf("%d", &opcao);
-		char* palavra;
+		char* palavra = malloc(32);
+		char **arg; 
 
 		switch (opcao)
 		{
 			case 1:
-				result_1 = inicializar();
-				printf("INICIALIZADO!\n");
+				result_1 = inicializar_1(NULL, clnt);
+				if(result_1 == (int *)NULL) {
+					cli_error(clnt);
+				}
+
+				if(*result_1)
+					printf("INICIALIZADO!\n\n");
 				break;
 			case 2:
-				printf("Informe a palavra:");
+				printf("Informe a palavra: ");
 				scanf("%s", palavra);
-				result_2 = insere(&palavra);
-				if (result_2 == (int *) NULL) {
-					clnt_perror (clnt, "call failed");
-				} else {
-					printf("PALAVRA INSERIDA!\n");
+				arg = &palavra; 
+				result_2 = insere_1(arg, clnt); 
+				
+				if (result_2 == (int *)NULL) {
+					cli_error(clnt);
 				}
+				if(*result_2)
+					printf("PALAVRA INSERIDA!\n");
+				else
+					printf("PALAVRA NÃO INSERIDA!\n");
+				
 				break;
 			case 3:
-				printf("Informe a palavra:");
+				printf("Informe a palavra: ");
 				scanf("%s", palavra);
-				result_3 = remover(&palavra);
-				if (result_3 == (int *) NULL) {
-					clnt_perror (clnt, "call failed");
-				} else {
-					printf("PALAVRA REMOVIDA!\n");
+				arg = &palavra;
+				result_3 = remove_1(arg, clnt);
+
+				if (result_3 == (int *)NULL) {
+					cli_error(clnt);
 				}
+
+				if (*result_3)
+					printf("PALAVRA REMOVIDA!\n");
+				else
+					printf("NÃO FOI POSSÍVEL REMOVER!\n");
+
 				break;
 			case 4:
-				printf("Informe a palavra:");
+				printf("Informe a palavra: ");
 				scanf("%s", palavra);
-				result_4 = busca(&palavra);
-				if (result_4 == (int *) NULL) {
-					clnt_perror (clnt, "call failed");
-				} else {
-					printf("PALAVRA ENCONTRADA!\n");
+  				arg = &palavra;
+				result_4 = busca_1(arg, clnt);
+				if (result_4 == (int *)NULL) {
+					cli_error(clnt);
 				}
+				if (*result_4)
+					printf("\nPALAVRA ENCONTRADA!\n");	
+				else
+					printf("\nPALAVRA NÃO ENCONTRADA!\n");	
+
 				break;
 			default:
+				sair = 1;
 				break;
 		}
 	}
 
 	clnt_destroy (clnt);
 	exit (0);
+}
+
+void cli_error(CLIENT *clnt)
+{
+   /* An error occurred while calling the server. */
+   /* Print error message and die. */
+   printf("RPC falhou\n");
+   clnt_destroy( clnt );
+   exit(1);
 }
 //gcc -o server rbd_sif.c rbd_svc.c rbd_srp.c rbd_xdr.c -I/usr/include/tirpc -ltirpc - compilacao de servidor
 //gcc -o cliente rbd_cif.c rbd_clnt.c rbd_client.c rbd_xdr.c -I/usr/include/tirpc -ltirpc  - compilacao de cliente
